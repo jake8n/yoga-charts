@@ -1,16 +1,18 @@
 import { h, render } from "preact";
-import { Chart } from "../src/components/Chart/Chart.tsx";
+import { Chart } from "../src/components/Chart/Chart";
 import { css } from "@emotion/css";
 
-const NUM_POINTS = 50;
-const xs = new Array(NUM_POINTS).fill(undefined).map((_, i) => i);
-function ys() {
-  const arr = [Math.random() * 100];
+const coords = (): Yoga.Coord[] => {
+  const NUM_POINTS = 50;
+  const _coords: Yoga.Coord[] = [[0, Math.random() * 100]];
   for (let i = 1; i < NUM_POINTS; i++) {
-    arr.push(Math.round((Math.random() - 0.5) * 10 + arr[i - 1]));
+    _coords.push([
+      i,
+      Math.round((Math.random() - 0.5) * 10 + _coords[i - 1][1]),
+    ]);
   }
-  return arr;
-}
+  return _coords;
+};
 
 const datasets: Yoga.Dataset[] = [
   {
@@ -18,16 +20,14 @@ const datasets: Yoga.Dataset[] = [
     color: "HotPink",
     drawLine: true,
     drawScatter: true,
-    xs,
-    ys: ys(),
+    coords: coords(),
   },
   {
     label: "Actual",
     color: "MediumBlue",
     drawLine: true,
     drawScatter: true,
-    xs,
-    ys: ys(),
+    coords: coords(),
   },
 ];
 const options: Yoga.UserOptions = {};

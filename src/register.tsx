@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { Chart } from "./components/Chart/Chart.tsx";
+import { Chart } from "./components/Chart/Chart";
 import register from "preact-custom-element";
 
 // convert string attributes to objects

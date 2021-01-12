@@ -4,13 +4,14 @@ const Y_MIN = "yMin";
 const Y_MAX = "yMax";
 
 declare namespace Yoga {
+  export type Coord = [number, number];
+
   export interface Dataset {
     label: string;
     color: string;
     drawLine?: boolean;
     drawScatter?: boolean;
-    xs: number[];
-    ys: number[];
+    coords: Yoga.Coord[];
   }
 
   export interface Options {

@@ -1,6 +1,6 @@
 import { h } from "preact";
 import { useMemo, useContext } from "preact/hooks";
-import { ChartContext } from "../ChartContext.ts";
+import { ChartContext } from "../ChartContext";
 import { css } from "@emotion/css";
 
 const styles = css`
@@ -9,24 +9,22 @@ const styles = css`
 
 export function Scatter({
   color,
-  xs,
-  ys,
+  coords,
 }: {
   color: string;
-  xs: number[];
-  ys: number[];
+  coords: Yoga.Coord[];
 }) {
   const { xMin, xMax, yMin, yMax, xScale, yScale } = useContext(ChartContext);
   const scatter = useMemo(() => {
-    return xs
-      .map((x, i) =>
-        x >= xMin && x <= xMax && ys[i] >= yMin && ys[i] <= yMax
-          ? `M${xScale(x)} ${yScale(ys[i])} A0 0 0 0 1 ${xScale(x) + 0.0001} ${
-              yScale(ys[i]) + 0.0001
+    return coords
+      .map(([x, y], i) =>
+        x >= xMin && x <= xMax && y >= yMin && y <= yMax
+          ? `M${xScale(x)} ${yScale(y)} A0 0 0 0 1 ${xScale(x) + 0.0001} ${
+              yScale(y) + 0.0001
             }`
           : ""
       )
       .join(" ");
-  }, [xs, ys, xMin, xMax, yMin, yMax, xScale, yScale]);
+  }, [coords, xMin, xMax, yMin, yMax, xScale, yScale]);
   return <path className={styles} stroke={color} d={scatter}></path>;
 }

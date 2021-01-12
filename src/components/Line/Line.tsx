@@ -1,6 +1,6 @@
 import { h } from "preact";
 import { useMemo, useContext } from "preact/hooks";
-import { ChartContext } from "../ChartContext.ts";
+import { ChartContext } from "../ChartContext";
 import { css } from "@emotion/css";
 
 const styles = css`
@@ -11,22 +11,18 @@ const styles = css`
 // TODO clip when using xMin and xMax
 export function Line({
   color,
-  xs,
-  ys,
+  coords,
 }: {
   color: string;
-  xs: number[];
-  ys: number[];
+  coords: Yoga.Coord[];
 }) {
   const { xScale, yScale } = useContext(ChartContext);
   const line = useMemo(() => {
-    return xs
-      .map((x, i) =>
-        i === 0
-          ? `M${xScale(x)},${yScale(ys[i])}`
-          : `L${xScale(x)},${yScale(ys[i])}`
+    return coords
+      .map(([x, y], i) =>
+        i === 0 ? `M${xScale(x)},${yScale(y)}` : `L${xScale(x)},${yScale(y)}`
       )
       .join(" ");
-  }, [xs, ys, xScale, yScale]);
+  }, [coords, xScale, yScale]);
   return <path className={styles} stroke={color} d={line}></path>;
 }

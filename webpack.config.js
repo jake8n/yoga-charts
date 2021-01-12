@@ -41,4 +41,7 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
   },
   plugins,
+  resolve: {
+    extensions: [".ts", ".tsx", ".js"],
+  },
 };

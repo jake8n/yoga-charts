@@ -1,11 +1,11 @@
 import { h, Fragment } from "preact";
 import { useMemo, useState, useCallback } from "preact/hooks";
 import { quadtree } from "d3-quadtree";
-import { userOptionsToOptions } from "./helpers.ts";
-import { styles } from "./styles.ts";
-import { ChartContext } from "../ChartContext.ts";
-import { Line } from "../Line/Line.tsx";
-import { Scatter } from "../Scatter/Scatter.tsx";
+import { userOptionsToOptions } from "./helpers";
+import { styles } from "./styles";
+import { ChartContext } from "../ChartContext";
+import { Line } from "../Line/Line";
+import { Scatter } from "../Scatter/Scatter";
 
 export function Chart({
   datasets,
@@ -34,11 +34,11 @@ export function Chart({
     (y: number): number => yMax + (yMin - yMax) * y,
     [yMin, yMax]
   );
-  const coordinates: [number, number][] = useMemo(
-    () => datasets.map(({ xs, ys }) => xs.map((x, i) => [x, ys[i]])).flat(1),
+  const coords: Yoga.Coord[] = useMemo(
+    () => datasets.map(({ coords }) => coords).flat(),
     [datasets]
   );
-  const tree = useMemo(() => quadtree().addAll(coordinates), [coordinates]);
+  const tree = useMemo(() => quadtree().addAll(coords), [coords]);
 
   const [isPointerVisible, setIsPointerVisible] = useState(false);
   const handleMouseEnter = () => setIsPointerVisible(true);
@@ -47,12 +47,10 @@ export function Chart({
   const [pointer, setPointer] = useState({ x: "0%", y: "0%" });
   const [near, setNear] = useState({ x: -1, y: -1 });
   let lastUpdateCall = -1;
-  const handleMouseMove = (
-    event: React.MouseEvent<SVGSVGElement, MouseEvent>
-  ) => {
+  const handleMouseMove = (event: MouseEvent) => {
     if (lastUpdateCall > -1) cancelAnimationFrame(lastUpdateCall);
     lastUpdateCall = requestAnimationFrame(() => {
-      // TODO layerX and layerY are not standard
+      // FIXME layerX and layerY are not standard
       // @ts-ignore
       const { layerX, layerY } = event;
       const { clientHeight, clientWidth } = event.target as HTMLElement;
@@ -88,17 +86,17 @@ export function Chart({
         <svg
           viewBox="0 0 1 1"
           preserveAspectRatio="none"
-          onMouseEnter={() => handleMouseEnter()}
-          onMouseLeave={() => handleMouseLeave()}
-          onMouseMove={(event) => handleMouseMove(event)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onMouseMove={handleMouseMove}
         >
           <clipPath id="clip">
             <rect x="0" y="0" width="1" height="1" />
           </clipPath>
-          {datasets.map(({ color, drawLine, drawScatter, xs, ys }) => (
+          {datasets.map(({ color, drawLine, drawScatter, coords }) => (
             <Fragment>
-              {drawLine ? <Line color={color} xs={xs} ys={ys} /> : null}
-              {drawScatter ? <Scatter color={color} xs={xs} ys={ys} /> : null}
+              {drawLine ? <Line color={color} coords={coords} /> : null}
+              {drawScatter ? <Scatter color={color} coords={coords} /> : null}
             </Fragment>
           ))}
         </svg>

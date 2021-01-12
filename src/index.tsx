@@ -1,1 +1,1 @@
-export { Chart } from "./components/Chart/Chart.tsx";
+export { Chart } from "./components/Chart/Chart";

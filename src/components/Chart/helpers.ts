@@ -13,12 +13,12 @@ export const userOptionsToOptions = (
     yMin = Number.MAX_VALUE;
   let xMax = Number.MIN_VALUE,
     yMax = Number.MIN_VALUE;
-  datasets.forEach(({ xs, ys }) => {
-    xs.forEach((x, i) => {
+  datasets.forEach(({ coords }) => {
+    coords.forEach(([x, y], i) => {
       if (x < xMin) xMin = x;
       if (x > xMax) xMax = x;
-      if (ys[i] < yMin) yMin = ys[i];
-      if (ys[i] > yMax) yMax = ys[i];
+      if (y < yMin) yMin = y;
+      if (y > yMax) yMax = y;
     });
   });
   const forcedOptions = {
