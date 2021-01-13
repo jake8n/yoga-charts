@@ -35,6 +35,7 @@ export const styles = css`
       padding: 4px 12px;
       position: absolute;
       transform: translateX(calc(-50% + 2px)) translateY(-1.6rem);
+      white-space: nowrap;
     }
   }
 

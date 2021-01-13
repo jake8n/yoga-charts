@@ -30,3 +30,14 @@ export const userOptionsToOptions = (
   };
   return forcedOptions;
 };
+
+export const getMouseCoord = (event: MouseEvent): Yoga.Coord => {
+  const { clientX, clientY } = event;
+  const {
+    top,
+    right,
+    bottom,
+    left,
+  } = (event.target as HTMLElement).getBoundingClientRect();
+  return [(clientX - left) / (right - left), (clientY - top) / (bottom - top)];
+};

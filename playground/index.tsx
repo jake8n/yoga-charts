@@ -1,10 +1,11 @@
+import "preact/debug";
 import { h, render } from "preact";
 import { Chart } from "../src/components/Chart/Chart";
 import { css } from "@emotion/css";
 
 const coords = (): Yoga.Coord[] => {
-  const NUM_POINTS = 50;
-  const _coords: Yoga.Coord[] = [[0, Math.random() * 100]];
+  const NUM_POINTS = 10;
+  const _coords: Yoga.Coord[] = [[0, Math.random() * NUM_POINTS]];
   for (let i = 1; i < NUM_POINTS; i++) {
     _coords.push([
       i,
@@ -29,12 +30,19 @@ const datasets: Yoga.Dataset[] = [
     drawScatter: true,
     coords: coords(),
   },
+  {
+    label: "Target",
+    color: "Cyan",
+    drawLine: true,
+    drawScatter: true,
+    coords: coords(),
+  },
 ];
 const options: Yoga.UserOptions = {};
 
 const styles = css`
   height: 320px;
-  /* max-width: 720px; */
+  /* max-width: 320px; */
   padding: 1rem;
 `;
 

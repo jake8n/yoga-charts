@@ -1,7 +1,7 @@
 import { h, Fragment } from "preact";
 import { useMemo, useState, useCallback } from "preact/hooks";
 import { quadtree } from "d3-quadtree";
-import { userOptionsToOptions } from "./helpers";
+import { getMouseCoord, userOptionsToOptions } from "./helpers";
 import { styles } from "./styles";
 import { ChartContext } from "../ChartContext";
 import { Line } from "../Line/Line";
@@ -38,7 +38,7 @@ export function Chart({
     () => datasets.map(({ coords }) => coords).flat(),
     [datasets]
   );
-  const tree = useMemo(() => quadtree().addAll(coords), [coords]);
+  const tree = useMemo(() => quadtree(coords), [coords]);
 
   const [isPointerVisible, setIsPointerVisible] = useState(false);
   const handleMouseEnter = () => setIsPointerVisible(true);
@@ -50,23 +50,20 @@ export function Chart({
   const handleMouseMove = (event: MouseEvent) => {
     if (lastUpdateCall > -1) cancelAnimationFrame(lastUpdateCall);
     lastUpdateCall = requestAnimationFrame(() => {
-      // FIXME layerX and layerY are not standard
-      // @ts-ignore
-      const { layerX, layerY } = event;
-      const { clientHeight, clientWidth } = event.target as HTMLElement;
-      const x = xInverseScale(layerX / clientWidth);
-      const y = yInverseScale(layerY / clientHeight);
+      const [mouseX, mouseY] = getMouseCoord(event);
+      const x = xInverseScale(mouseX);
+      const y = yInverseScale(mouseY);
       const [nearX, nearY] = tree.find(x, y);
       setNear({
         x: nearX,
         y: nearY,
       });
       setPointer({
-        x: `${(100 * (nearX - xMin)) / (xMax - xMin)}%`,
-        y: `${(100 * (nearY - yMin)) / (yMax - yMin)}%`,
+        x: `${100 * xScale(nearX)}%`,
+        y: `${100 - 100 * yScale(nearY)}%`,
       });
+      lastUpdateCall = -1;
     });
-    lastUpdateCall = -1;
   };
 
   return (
@@ -80,7 +77,9 @@ export function Chart({
               bottom: pointer.y,
             }}
           >
-            <span>{Math.floor(near.y)}</span>
+            <span>
+              {Math.floor(near.x)}, {Math.floor(near.y)}
+            </span>
           </div>
         ) : null}
         <svg

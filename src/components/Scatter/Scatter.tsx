@@ -16,6 +16,7 @@ export function Scatter({
 }) {
   const { xMin, xMax, yMin, yMax, xScale, yScale } = useContext(ChartContext);
   const scatter = useMemo(() => {
+    console.debug("scatter");
     return coords
       .map(([x, y], i) =>
         x >= xMin && x <= xMax && y >= yMin && y <= yMax

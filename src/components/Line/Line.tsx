@@ -18,6 +18,7 @@ export function Line({
 }) {
   const { xScale, yScale } = useContext(ChartContext);
   const line = useMemo(() => {
+    console.debug("line");
     return coords
       .map(([x, y], i) =>
         i === 0 ? `M${xScale(x)},${yScale(y)}` : `L${xScale(x)},${yScale(y)}`
