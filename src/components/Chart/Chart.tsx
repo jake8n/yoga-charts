@@ -53,15 +53,18 @@ export function Chart({
       const [mouseX, mouseY] = getMouseCoord(event);
       const x = xInverseScale(mouseX);
       const y = yInverseScale(mouseY);
-      const [nearX, nearY] = tree.find(x, y);
-      setNear({
-        x: nearX,
-        y: nearY,
-      });
-      setPointer({
-        x: `${100 * xScale(nearX)}%`,
-        y: `${100 - 100 * yScale(nearY)}%`,
-      });
+      const near = tree.find(x, y);
+      if (near) {
+        const [nearX, nearY] = near;
+        setNear({
+          x: nearX,
+          y: nearY,
+        });
+        setPointer({
+          x: `${100 * xScale(nearX)}%`,
+          y: `${100 - 100 * yScale(nearY)}%`,
+        });
+      }
       lastUpdateCall = -1;
     });
   };

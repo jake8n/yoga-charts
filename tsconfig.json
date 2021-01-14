@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
     "jsx": "react",
     "jsxFactory": "h",
     "jsxFragmentFactory": "Fragment",
     "lib": ["ESNext"],
     "moduleResolution": "node",
     "skipLibCheck": true,
+    "strict": true,
     "target": "es2015"
   }
 }

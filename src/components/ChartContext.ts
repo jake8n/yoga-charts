@@ -7,4 +7,11 @@ export const ChartContext = createContext<{
   yMax: number;
   xScale: Function;
   yScale: Function;
-}>(null);
+}>({
+  xMin: -1,
+  xMax: 1,
+  yMin: -1,
+  yMax: 1,
+  xScale: () => 0,
+  yScale: () => 0,
+});
