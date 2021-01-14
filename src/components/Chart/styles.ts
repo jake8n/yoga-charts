@@ -40,9 +40,7 @@ export const styles = css`
   }
 
   path {
-    opacity: 0.8;
+    opacity: 0.7;
     pointer-events: none;
-    stroke-linejoin: round;
-    stroke-linecap: round;
   }
 `;

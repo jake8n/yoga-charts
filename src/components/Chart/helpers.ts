@@ -21,7 +21,7 @@ export const userOptionsToOptions = (
       if (y > yMax) yMax = y;
     });
   });
-  const forcedOptions = {
+  const forcedOptions: Yoga.Options = {
     xMin,
     xMax,
     yMin,

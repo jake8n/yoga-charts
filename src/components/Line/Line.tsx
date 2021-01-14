@@ -3,11 +3,6 @@ import { useMemo, useContext } from "preact/hooks";
 import { ChartContext } from "../ChartContext";
 import { css } from "@emotion/css";
 
-const styles = css`
-  fill: none;
-  stroke-width: 2;
-`;
-
 // TODO clip when using xMin and xMax
 export function Line({
   color,
@@ -16,6 +11,12 @@ export function Line({
   color: string;
   coords: Yoga.Coord[];
 }) {
+  const styles = css`
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: miter;
+    stroke-linecap: butt;
+  `;
   const { xScale, yScale } = useContext(ChartContext);
   const line = useMemo(() => {
     console.debug("line");
