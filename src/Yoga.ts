@@ -5,6 +5,7 @@ const Y_MAX = "yMax";
 
 declare namespace Yoga {
   export type Coord = [number, number];
+  export type Bar = [string, number];
 
   export interface Dataset {
     label: string;
@@ -12,6 +13,12 @@ declare namespace Yoga {
     drawLine?: boolean;
     drawScatter?: boolean;
     coords: Yoga.Coord[];
+  }
+
+  export interface Categorical {
+    label: string;
+    color: string;
+    coords: Yoga.Bar[];
   }
 
   export interface Options {

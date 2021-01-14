@@ -1,6 +1,7 @@
 import "preact/debug";
 import { h, render } from "preact";
 import { Chart } from "../src/components/Chart/Chart";
+import { Bar } from "../src/components/Bar/Bar";
 import { css } from "@emotion/css";
 
 const coords = (): Yoga.Coord[] => {
@@ -38,6 +39,11 @@ const datasets: Yoga.Dataset[] = [
     coords: coords(),
   },
 ];
+const bar: Yoga.Categorical = {
+  label: "Expected",
+  color: "HotPink",
+  coords: coords().map(([x, y]) => [`${x}`, y]),
+};
 const options: Yoga.UserOptions = {};
 
 const styles = css`
@@ -48,6 +54,7 @@ const styles = css`
 
 const App = () => (
   <div className={styles}>
+    <Bar dataset={bar} />
     <Chart datasets={datasets} options={options} />
   </div>
 );
