@@ -25,7 +25,8 @@ export function Chart({
   datasets: Yoga.Dataset[];
   options: Yoga.UserOptions;
 }) {
-  const ref = useRef<SVGSVGElement>();
+  const observeRef = useRef<HTMLDivElement>();
+  const sizeRef = useRef<SVGSVGElement>();
   const { xMin, xMax, yMin, yMax } = useMemo(
     () => userOptionsToOptions(datasets, options),
     [datasets, options]
@@ -40,14 +41,22 @@ export function Chart({
   );
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
+  const [resizeObserver] = useState(
+    // @ts-ignore ResizeObserver not defined
+    new ResizeObserver(() => {
+      setWidth(sizeRef.current.clientWidth);
+      setHeight(sizeRef.current.clientHeight);
+    })
+  );
   useEffect(() => {
-    setWidth(ref.current.clientWidth);
-    setHeight(ref.current.clientHeight);
-  }, [ref]);
+    setWidth(sizeRef.current.clientWidth);
+    setHeight(sizeRef.current.clientHeight);
+    resizeObserver.observe(observeRef.current);
+    return () => resizeObserver.unobserve(observeRef.current);
+  }, [sizeRef, observeRef]);
   // use coordinate space of painted chart in order to calculate pointer proximity in px
   // otherwise distance is skewed to axis with largest range
   // hard to explain :( see weird tooltip behaviour on previous commits
-  // TODO recalculate on resize
   const coords: Yoga.Coord[] = useMemo(
     () =>
       datasets
@@ -96,7 +105,7 @@ export function Chart({
 
   return (
     <ChartContext.Provider value={{ xMin, xMax, yMin, yMax, xScale, yScale }}>
-      <div className={styles}>
+      <div ref={observeRef} className={styles}>
         {isPointerVisible ? (
           <div
             className="pointer"
@@ -111,7 +120,7 @@ export function Chart({
           </div>
         ) : null}
         <svg
-          ref={ref}
+          ref={sizeRef}
           viewBox="0 0 1 1"
           preserveAspectRatio="none"
           onMouseEnter={handleMouseEnter}
