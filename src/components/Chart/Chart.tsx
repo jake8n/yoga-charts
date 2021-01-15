@@ -1,7 +1,18 @@
 import { h, Fragment } from "preact";
-import { useMemo, useState, useCallback } from "preact/hooks";
+import {
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+} from "preact/hooks";
 import { quadtree } from "d3-quadtree";
-import { getMouseCoord, userOptionsToOptions } from "./helpers";
+import {
+  getMouseCoord,
+  inverseScaleInRange,
+  scaleInRange,
+  userOptionsToOptions,
+} from "./helpers";
 import { styles } from "./styles";
 import { ChartContext } from "../ChartContext";
 import { Line } from "../Line/Line";
@@ -14,6 +25,7 @@ export function Chart({
   datasets: Yoga.Dataset[];
   options: Yoga.UserOptions;
 }) {
+  const ref = useRef<SVGSVGElement>();
   const { xMin, xMax, yMin, yMax } = useMemo(
     () => userOptionsToOptions(datasets, options),
     [datasets, options]
@@ -26,17 +38,30 @@ export function Chart({
     (y: number): number => (y - yMax) / (yMin - yMax),
     [yMin, yMax]
   );
-  const xInverseScale = useCallback(
-    (x: number): number => xMin + (xMax - xMin) * x,
-    [xMin, xMax]
-  );
-  const yInverseScale = useCallback(
-    (y: number): number => yMax + (yMin - yMax) * y,
-    [yMin, yMax]
-  );
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    setWidth(ref.current.clientWidth);
+    setHeight(ref.current.clientHeight);
+  }, [ref]);
+  // use coordinate space of painted chart in order to calculate pointer proximity in px
+  // otherwise distance is skewed to axis with largest range
+  // hard to explain :( see weird tooltip behaviour on previous commits
+  // TODO recalculate on resize
   const coords: Yoga.Coord[] = useMemo(
-    () => datasets.map(({ coords }) => coords).flat(),
-    [datasets]
+    () =>
+      datasets
+        .map(({ coords }) =>
+          coords.map(
+            ([x, y]) =>
+              [
+                scaleInRange(x, [xMin, xMax], [0, width]),
+                scaleInRange(y, [yMin, yMax], [height, 0]),
+              ] as Yoga.Coord
+          )
+        )
+        .flat(),
+    [datasets, width, height]
   );
   const tree = useMemo(() => quadtree(coords), [coords]);
 
@@ -51,18 +76,18 @@ export function Chart({
     if (lastUpdateCall > -1) cancelAnimationFrame(lastUpdateCall);
     lastUpdateCall = requestAnimationFrame(() => {
       const [mouseX, mouseY] = getMouseCoord(event);
-      const x = xInverseScale(mouseX);
-      const y = yInverseScale(mouseY);
-      const near = tree.find(x, y);
+      const near = tree.find(mouseX, mouseY);
       if (near) {
         const [nearX, nearY] = near;
+        const x = inverseScaleInRange(nearX, [xMin, xMax], [0, width]);
+        const y = inverseScaleInRange(nearY, [yMin, yMax], [height, 0]);
         setNear({
-          x: nearX,
-          y: nearY,
+          x: x,
+          y: y,
         });
         setPointer({
-          x: `${100 * xScale(nearX)}%`,
-          y: `${100 - 100 * yScale(nearY)}%`,
+          x: `${100 * xScale(x)}%`,
+          y: `${100 - 100 * yScale(y)}%`,
         });
       }
       lastUpdateCall = -1;
@@ -86,6 +111,7 @@ export function Chart({
           </div>
         ) : null}
         <svg
+          ref={ref}
           viewBox="0 0 1 1"
           preserveAspectRatio="none"
           onMouseEnter={handleMouseEnter}
