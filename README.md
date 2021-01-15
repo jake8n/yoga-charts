@@ -11,13 +11,19 @@ export const MyChart = () => <Chart datasets={datasets} options={options} />;
 ## Custom element
 
 ```html
-<yoga-chart></yoga-chart>
+<body>
+  <yoga-chart></yoga-chart>
+  <yoga-bar></yoga-bar>
+</body>
 ```
 
 ```js
 import "yoga-charts/register";
 
-const element = document.querySelector("yoga-chart");
-element.setAttribute("datasets", JSON.stringify(datasets));
-element.setAttribute("options", JSON.stringify(options));
+const yogaChart = document.querySelector("yoga-chart");
+yogaChart.setAttribute("datasets", JSON.stringify(datasets));
+yogaChart.setAttribute("options", JSON.stringify(options));
+
+const yogaBar = document.querySelector("yoga-bar");
+yogaBar.setAttribute("datasets", JSON.stringify(bars));
 ```
