@@ -1,4 +1,4 @@
-import { h, Fragment } from "preact";
+import { h } from "preact";
 import {
   useMemo,
   useState,
@@ -7,16 +7,31 @@ import {
   useEffect,
 } from "preact/hooks";
 import { quadtree } from "d3-quadtree";
-import {
-  getMouseCoord,
-  inverseScaleInRange,
-  scaleInRange,
-  userOptionsToOptions,
-} from "./helpers";
-import { styles } from "./styles";
-import { ChartContext } from "../ChartContext";
-import { Line } from "../Line/Line";
-import { Scatter } from "../Scatter/Scatter";
+import { scaleInRange, userOptionsToOptions } from "./helpers";
+import { Pointer } from "./Pointer";
+import { Paint } from "./Paint";
+import { css } from "@emotion/css";
+
+export const styles = css`
+  height: 100%;
+  position: relative;
+  width: 100%;
+
+  svg {
+    display: block;
+    height: 100%;
+    overflow: visible;
+    width: 100%;
+
+    > * {
+      vector-effect: non-scaling-stroke;
+    }
+  }
+
+  path {
+    opacity: 0.7;
+  }
+`;
 
 export function Chart({
   datasets,
@@ -25,8 +40,8 @@ export function Chart({
   datasets: Yoga.Dataset[];
   options: Yoga.UserOptions;
 }) {
-  const observeRef = useRef<HTMLDivElement>();
-  const sizeRef = useRef<SVGSVGElement>();
+  console.debug("chart");
+  const ref = useRef<SVGSVGElement>();
   const { xMin, xMax, yMin, yMax } = useMemo(
     () => userOptionsToOptions(datasets, options),
     [datasets, options]
@@ -44,100 +59,68 @@ export function Chart({
   const [resizeObserver] = useState(
     // @ts-ignore ResizeObserver not defined
     new ResizeObserver(() => {
-      setWidth(sizeRef.current.clientWidth);
-      setHeight(sizeRef.current.clientHeight);
+      const { clientWidth, clientHeight } = ref.current;
+      if (width !== clientWidth) setWidth(clientWidth);
+      if (height !== clientHeight) setHeight(clientHeight);
     })
   );
   useEffect(() => {
-    setWidth(sizeRef.current.clientWidth);
-    setHeight(sizeRef.current.clientHeight);
-    resizeObserver.observe(observeRef.current);
-    return () => resizeObserver.unobserve(observeRef.current);
-  }, [sizeRef, observeRef]);
+    resizeObserver.observe(ref.current);
+    return () => resizeObserver.unobserve(ref.current);
+  }, [ref]);
   // use coordinate space of painted chart in order to calculate pointer proximity in px
   // otherwise distance is skewed to axis with largest range
   // hard to explain :( see weird tooltip behaviour on previous commits
-  const coords: Yoga.Coord[] = useMemo(
-    () =>
-      datasets
-        .map(({ coords }) =>
-          coords.map(
-            ([x, y]) =>
-              [
-                scaleInRange(x, [xMin, xMax], [0, width]),
-                scaleInRange(y, [yMin, yMax], [height, 0]),
-              ] as Yoga.Coord
-          )
+  const coords: Yoga.Coord[] = useMemo(() => {
+    console.time("coords");
+    const _coords = datasets
+      .map(({ coords }) =>
+        coords.map(
+          ([x, y]) =>
+            [
+              scaleInRange(x, [xMin, xMax], [0, width]),
+              scaleInRange(y, [yMin, yMax], [height, 0]),
+            ] as Yoga.Coord
         )
-        .flat(),
-    [datasets, width, height]
-  );
-  const tree = useMemo(() => quadtree(coords), [coords]);
-
-  const [isPointerVisible, setIsPointerVisible] = useState(false);
-  const handleMouseEnter = () => setIsPointerVisible(true);
-  const handleMouseLeave = () => setIsPointerVisible(false);
-
-  const [pointer, setPointer] = useState({ x: "0%", y: "0%" });
-  const [near, setNear] = useState({ x: -1, y: -1 });
-  let lastUpdateCall = -1;
-  const handleMouseMove = (event: MouseEvent) => {
-    if (lastUpdateCall > -1) cancelAnimationFrame(lastUpdateCall);
-    lastUpdateCall = requestAnimationFrame(() => {
-      const [mouseX, mouseY] = getMouseCoord(event);
-      const near = tree.find(mouseX, mouseY);
-      if (near) {
-        const [nearX, nearY] = near;
-        const x = inverseScaleInRange(nearX, [xMin, xMax], [0, width]);
-        const y = inverseScaleInRange(nearY, [yMin, yMax], [height, 0]);
-        setNear({
-          x: x,
-          y: y,
-        });
-        setPointer({
-          x: `${100 * xScale(x)}%`,
-          y: `${100 - 100 * yScale(y)}%`,
-        });
-      }
-      lastUpdateCall = -1;
-    });
-  };
+      )
+      .flat();
+    console.timeEnd("coords");
+    return _coords;
+  }, [datasets, width, height]);
+  const tree = useMemo(() => {
+    console.time("quadtree");
+    const _tree = quadtree(coords);
+    console.timeEnd("quadtree");
+    return _tree;
+  }, [coords]);
 
   return (
-    <ChartContext.Provider value={{ xMin, xMax, yMin, yMax, xScale, yScale }}>
-      <div ref={observeRef} className={styles}>
-        {isPointerVisible ? (
-          <div
-            className="pointer"
-            style={{
-              left: pointer.x,
-              bottom: pointer.y,
-            }}
-          >
-            <span>
-              {Math.floor(near.x)}, {Math.floor(near.y)}
-            </span>
-          </div>
-        ) : null}
-        <svg
-          ref={sizeRef}
-          viewBox="0 0 1 1"
-          preserveAspectRatio="none"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onMouseMove={handleMouseMove}
-        >
-          <clipPath id="clip">
-            <rect x="0" y="0" width="1" height="1" />
-          </clipPath>
-          {datasets.map(({ color, drawLine, drawScatter, coords }) => (
-            <Fragment>
-              {drawLine ? <Line color={color} coords={coords} /> : null}
-              {drawScatter ? <Scatter color={color} coords={coords} /> : null}
-            </Fragment>
-          ))}
-        </svg>
-      </div>
-    </ChartContext.Provider>
+    <div className={styles}>
+      <Pointer
+        tree={tree}
+        xMin={xMin}
+        xMax={xMax}
+        yMin={yMin}
+        yMax={yMax}
+        xScale={xScale}
+        yScale={yScale}
+        width={width}
+        height={height}
+      />
+      <svg ref={ref} viewBox="0 0 1 1" preserveAspectRatio="none">
+        <clipPath id="clip">
+          <rect x="0" y="0" width="1" height="1" />
+        </clipPath>
+        <Paint
+          datasets={datasets}
+          xMin={xMin}
+          xMax={xMax}
+          yMin={yMin}
+          yMax={yMax}
+          xScale={xScale}
+          yScale={yScale}
+        />
+      </svg>
+    </div>
   );
 }

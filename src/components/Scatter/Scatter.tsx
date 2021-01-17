@@ -1,23 +1,33 @@
 import { h } from "preact";
-import { useMemo, useContext } from "preact/hooks";
-import { ChartContext } from "../ChartContext";
+import { useMemo } from "preact/hooks";
 import { css } from "@emotion/css";
 
 export function Scatter({
   color,
   coords,
+  xMin,
+  xMax,
+  yMin,
+  yMax,
+  xScale,
+  yScale,
 }: {
   color: string;
   coords: Yoga.Coord[];
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+  xScale: Function;
+  yScale: Function;
 }) {
+  console.debug("scatter");
   const styles = css`
     stroke-linejoin: round;
     stroke-linecap: round;
     stroke-width: 10;
   `;
-  const { xMin, xMax, yMin, yMax, xScale, yScale } = useContext(ChartContext);
   const scatter = useMemo(() => {
-    console.debug("scatter");
     return coords
       .map(([x, y], i) =>
         x >= xMin && x <= xMax && y >= yMin && y <= yMax
